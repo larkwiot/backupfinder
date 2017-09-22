@@ -1,4 +1,5 @@
 The Backup Bruteforcer script will ask you for the link to the given file you want to find a backup of. It will ask for the link in parts. This is how you may have to split up a few example links:
+
 https://wordpresswebsite.com/wp-login/login.php :::
 
 HTTP Host = https://wordpresswebsite.com 
