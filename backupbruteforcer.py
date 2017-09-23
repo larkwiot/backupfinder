@@ -1,6 +1,6 @@
 import requests
 import time
-from progressbar import ProgressBar
+import progressbar
 
 things = ['conf', 'bak', 'swp', 'txt', 'old', 'tar', 'tar.gz', 'tar.bz2', 'zip', 'inc',
         'asa', 'tgz', 'gz', 'rar', 'java', 'py', 'js', 'pdf', 'doc', 'docx', 'rtf',
@@ -10,7 +10,7 @@ things = ['conf', 'bak', 'swp', 'txt', 'old', 'tar', 'tar.gz', 'tar.bz2', 'zip',
 
 print
 print "============="
-print "[i] Beginning..."
+print "[i] Beginning."
 print "============="
 
 http = raw_input("[>] Enter the HTTP host >>> ")
@@ -42,52 +42,57 @@ def checkreq(request):
     else:
         return True
 
+widgets = ['[1/4] Appending |', progressbar.Percentage(), '| ', progressbar.AdaptiveETA()]
+
 print "============="
-print "=== Appending ==="
-pbar = ProgressBar()
+print "[i] Testing."
+print "============="
+pbar = progressbar.ProgressBar(widgets=widgets)
 for ext in pbar(things):
     req = http + link + file + "." + fiex + "." + ext
     if checkreq(req):
         connection = requests.head(req)
         store(req, connection.status_code, req)
-        time.sleep(0.05)
+        time.sleep(0.001)
     else:
         continue
 
-print "=== Replacing ==="
-pbar = ProgressBar()
+widgets[0] = '[2/4] Replacing |'
+pbar = progressbar.ProgressBar(widgets=widgets)
 for repl in pbar(things):
     req = http + link + file + "." + repl
     if checkreq(req):
         connection = requests.head(req)
         store(req, connection.status_code, req)
-        time.sleep(0.05)
+        time.sleep(0.001)
     else:
         continue
 
-print "=== Prepending ==="
-pbar = ProgressBar()
+widgets[0] = '[3/4] Prepending |'
+pbar = progressbar.ProgressBar(widgets=widgets)
 for pre in pbar(things):
     req = http + link + pre + file + "." + fiex
     if checkreq(req):
         connection = requests.head(req)
         store(req, connection.status_code, req)
-        time.sleep(0.05)
+        time.sleep(0.001)
     else:
         continue
 
-print "=== Mixing ==="
-pbar = ProgressBar()
+widgets[0] = '[4/4] Mixing |'
+pbar = progressbar.ProgressBar(widgets=widgets)
 for exten in pbar(range(0, len(things))):
     for main in things:
         req = http + link + main + file + fiex + "." + things[exten]
         if checkreq(req):
             connection = requests.head(req)
             store(req, connection.status_code, req)
-            time.sleep(0.05)
+            time.sleep(0.001)
         else:
             continue
 
+print "============="
+print "[i] Results."
 c200s = 0
 for search in range(0, len(codes)):
     if codes[search] != 404:
