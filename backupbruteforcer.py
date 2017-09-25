@@ -9,24 +9,44 @@ things = ['conf', 'bak', 'swp', 'txt', 'old', 'tar', 'tar.gz', 'tar.bz2', 'zip',
         'copyof', 'copy of', 'snapshot']
 
 print
-print "============="
-print "[i] Beginning."
-print "============="
+print '''
+=============
+[i] Beginning.
+============='''
 
-http = raw_input("[>] Enter the HTTP host >>> ")
-link = raw_input("[>] Enter the directory >>> ")
-file = raw_input("[>] Enter the file      >>> ")
-fiex = raw_input("[>] Enter the extension >>> ")
-things.append(fiex)
+retry = 1
+def retrySet():
+    global retry
+    print '[!] Connection failed and/or invalid!'
+    retcho = str(raw_input('[!] Try again? (Y/n) >>> ')).upper()
+    if retcho == 'Y' or retcho == "\\n":
+        retry == 1
+    elif retcho == 'N':
+        retry = 0
+        print '\n;(\n'
+        exit(1)
+    else:
+        print "[!] Invalid option!"
+        print "[i] Trying again on your behalf."
+        retry == 1
 
-session = requests.head(http)
-if session.status_code == 200:
-    print "[i] Connection is working."
-else:
-    print "[!] Connection does not work!"
-    print "============="
-    exit(1)
-
+while retry:
+    http = raw_input("[>] Enter the HTTP host >>> ")
+    link = raw_input("[>] Enter the directory >>> ")
+    fyle = raw_input("[>] Enter the file      >>> ")
+    fiex = raw_input("[>] Enter the extension >>> ")
+    try:
+        session = requests.head(http)
+        if session.status_code == 200:
+            print "[i] Connection is working."
+            things.append(fiex)
+            retry = 0
+        else:
+            print "[!] Connection made, code not 200!"
+            retrySet()
+    except requests.exceptions.RequestException:
+        retrySet()
+            
 urls = []
 codes = []
 direct = []
@@ -44,12 +64,13 @@ def checkreq(request):
 
 widgets = ['[1/4] Appending |', progressbar.Percentage(), '| ', progressbar.AdaptiveETA()]
 
-print "============="
-print "[i] Testing."
-print "============="
+print '''
+=============
+[i] Testing.
+============='''
 pbar = progressbar.ProgressBar(widgets=widgets)
 for ext in pbar(things):
-    req = http + link + file + "." + fiex + "." + ext
+    req = http + link + fyle + "." + fiex + "." + ext
     if checkreq(req):
         connection = requests.head(req)
         store(req, connection.status_code, req)
@@ -60,7 +81,7 @@ for ext in pbar(things):
 widgets[0] = '[2/4] Replacing |'
 pbar = progressbar.ProgressBar(widgets=widgets)
 for repl in pbar(things):
-    req = http + link + file + "." + repl
+    req = http + link + fyle + "." + repl
     if checkreq(req):
         connection = requests.head(req)
         store(req, connection.status_code, req)
@@ -71,7 +92,7 @@ for repl in pbar(things):
 widgets[0] = '[3/4] Prepending |'
 pbar = progressbar.ProgressBar(widgets=widgets)
 for pre in pbar(things):
-    req = http + link + pre + file + "." + fiex
+    req = http + link + pre + fyle + "." + fiex
     if checkreq(req):
         connection = requests.head(req)
         store(req, connection.status_code, req)
@@ -83,7 +104,7 @@ widgets[0] = '[4/4] Mixing |'
 pbar = progressbar.ProgressBar(widgets=widgets)
 for exten in pbar(range(0, len(things))):
     for main in things:
-        req = http + link + main + file + fiex + "." + things[exten]
+        req = http + link + main + fyle + fiex + "." + things[exten]
         if checkreq(req):
             connection = requests.head(req)
             store(req, connection.status_code, req)
@@ -104,8 +125,9 @@ for search in range(0, len(codes)):
 print "============="
 print "[i] " + str(c200s) + " URLs found."
 print "[i] " + str(len(codes)) + " URLs attempted."
-print "============="
-print "[*] Done."
-print "============="
+print '''
+=============
+[*] Done.
+============='''
 print
 exit(0)
