@@ -48,13 +48,9 @@ def obtain():
             print "[!] Error, connection made, code not 200!"
             if retrySet():
                 obtain()
-            else:
-                print "1111111"
     except requests.exceptions.RequestException:
         if retrySet():
             obtain()
-        else:
-            print "222222222"
 
 def retrySet():
     global retry
