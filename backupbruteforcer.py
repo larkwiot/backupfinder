@@ -1,143 +1,125 @@
-import requests, time, progressbar
+import requests, time
+from multiprocessing import Process, Manager
 
-things = ['conf', 'bak', 'swp', 'txt', 'old', 'tar', 'tar.gz', 'tar.bz2', 'zip', 'inc',
-        'asa', 'tgz', 'gz', 'rar', 'java', 'py', 'js', 'pdf', 'doc', 'docx', 'rtf',
-        'pl', 'o', 'obj', 'jar', 'inf', 'exe', 'c', 'bat', 'asm', 'awk', 's', 'sh',
-        'src', 'log', 'lock', 'jsp', 'aspx', 'dev', 'orig', 'copy', 'tmp', '~', 'backup',
-        'copyof', 'copy of', 'snapshot']
+def findchar(enteredString, searchString, occurence):
+    ecx = 1
+    place = 1
+    for iter in range(0, len(enteredString)):
+        if enteredString[iter:len(searchString) + iter:] == searchString and ecx == occurence:
+            return iter
+            break
+        elif enteredString[iter:len(searchString) + iter:] == searchString and ecx != occurence:
+            ecx += 1
+            continue
+        place += 1
 
-print
-print "=============\n[i] Beginning.\n============="
-
-urls = []
-codes = []
-direct = []
-
+# 0 = http, 1 = link, 2 = fyle, 3 = fiex
 conns = []
 
-retry = 1
-def main():
-    # 0 = http, 1 = link, 2 = fyle, 3 = fiex
-    atmp = int(raw_input("[>] Enter No. of files  >>> "))
-    global retry
-    while retry:
-        if atmp == 1:
-            obtain()
-            attempt(*conns[0])
-        else:
-            for conn in range(1, atmp+1):
-                obtain()
-            for conn2 in conns:
-                print "[1/" + str(len(conns)+1) + "] Attempting " + conn2[0] + conn2[1] + conn2[2] + '.' + conn2[3]
-                attempt(*conn2)
-
 def obtain():
-    global retry
-    http = str(raw_input("[>] Enter the HTTP host >>> "))
-    link = str(raw_input("[>] Enter the directory >>> "))
-    fyle = str(raw_input("[>] Enter the file      >>> "))
-    fiex = str(raw_input("[>] Enter the extension >>> "))
-    try:
-        session = requests.head(http)
-        if session.status_code == 200:
-            print "[i] Connection to " + http + " successful."
-            things.append(fiex)
-            retry = 0
-            conns.append([http, link, fyle, fiex])
+    enteredURL = str(raw_input("[>] Enter the URL >>> "))
+    http = enteredURL[:findchar(enteredURL, '/', 3):]
+    link = ''
+    for linker in range(len(enteredURL)-1, 0, -1):
+        if enteredURL[linker] == '/':
+            link = enteredURL[findchar(enteredURL, '/', 3):linker+1:]
+            break
         else:
-            print "[!] Error, connection made, code not 200!"
-            if retrySet():
-                obtain()
-    except requests.exceptions.RequestException:
-        if retrySet():
-            obtain()
-
-def retrySet():
-    global retry
-    print '[!] Connection failed and/or invalid!'
-    retcho = str(raw_input('[!] Try again? (Y/n) >>> ')).upper()
-    if retcho == 'N':
-        retry = 0
-        print '\n;(\n'
-        exit(1)
+            continue
+    fyle = enteredURL[findchar(enteredURL, link, 1)+len(link):findchar(enteredURL, '.', 3):]
+    fiex = enteredURL[findchar(enteredURL, fyle, 1)+len(fyle)+1::]
+    print '[?] We received ::: ' + http + link + fyle + '.' + fiex
+    correction = str(raw_input('[?] Is this correct? (Y/n) >>> '))
+    if correction == 'n':
+        return False
     else:
-        return True
-
-def store(request, code, directlink):
-        urls.append(request)
-        codes.append(code)
-        direct.append(directlink)
-
-def checkreq(request):
-        if request in direct:
+        try:
+            session = requests.head(http+link+fyle+'.'+fiex)
+            if session.status_code == 200:
+                print "[i] Connection to " + http + " successful."
+                global conns
+                conns.append([http, link, fyle, fiex])
+                return True
+            else:
+                print "[!] Error, connection made, code not 200!"
+                return False
+        except requests.exceptions.RequestException:
             return False
-        else:
-            return True
 
-def attempt(http, link, fyle, fiex):
-    widgets = ['[1/4] Appending |', progressbar.Percentage(), '| ', progressbar.AdaptiveETA()]
+def attempt(http, link, fyle, fiex, iam, urls):
+    things = ['conf', 'bak', 'swp', 'txt', 'old', 'tar', 'tar.gz', 'tar.bz2', 'zip', 'inc',
+              'asa', 'tgz', 'gz', 'rar', 'java', 'py', 'js', 'pdf', 'doc', 'docx', 'rtf',
+              'pl', 'o', 'obj', 'jar', 'inf', 'exe', 'c', 'bat', 'asm', 'awk', 's', 'sh',
+              'src', 'log', 'lock', 'jsp', 'aspx', 'dev', 'orig', 'copy', 'tmp', '~', 'backup',
+              'copyof', 'copy of', 'snapshot', fiex]
 
-    print "=============\n[i] Testing.\n============="
-    pbar = progressbar.ProgressBar(widgets=widgets)
-    for ext in pbar(things):
+    print iam + ' ::: Attempt method [1/4]'
+    for ext in things:
         req = http + link + fyle + "." + fiex + "." + ext
-        if checkreq(req):
-            connection = requests.head(req)
-            store(req, connection.status_code, req)
-            time.sleep(0.001)
-        else:
-            continue
-
-    widgets[0] = '[2/4] Replacing |'
-    pbar = progressbar.ProgressBar(widgets=widgets)
-    for repl in pbar(things):
+        connection = requests.head(req)
+        urls.append(req)
+        urls.append(connection.status_code)
+        time.sleep(0.001)
+    
+    print iam + ' ::: Attempt method [2/4]'
+    for repl in things:
         req = http + link + fyle + "." + repl
-        if checkreq(req):
-            connection = requests.head(req)
-            store(req, connection.status_code, req)
-            time.sleep(0.001)
-        else:
-            continue
+        connection = requests.head(req)
+        urls.append(req)
+        urls.append(connection.status_code)
+        time.sleep(0.001)
 
-    widgets[0] = '[3/4] Prepending |'
-    pbar = progressbar.ProgressBar(widgets=widgets)
-    for pre in pbar(things):
+    print iam + ' ::: Attempt method [3/4]'
+    for pre in things:
         req = http + link + pre + fyle + "." + fiex
-        if checkreq(req):
-            connection = requests.head(req)
-            store(req, connection.status_code, req)
-            time.sleep(0.001)
-        else:
-            continue
+        connection = requests.head(req)
+        urls.append(req)
+        urls.append(connection.status_code)
+        time.sleep(0.001)
 
-    widgets[0] = '[4/4] Mixing |'
-    pbar = progressbar.ProgressBar(widgets=widgets)
-    for exten in pbar(range(0, len(things))):
+    print iam + ' ::: Attempt method [4/4]'
+    for exten in range(0, len(things)):
         for main in things:
             req = http + link + main + fyle + fiex + "." + things[exten]
-            if checkreq(req):
-                connection = requests.head(req)
-                store(req, connection.status_code, req)
-                time.sleep(0.001)
-            else:
-                continue
+            connection = requests.head(req)
+            urls.append(req)
+            urls.append(connection.status_code)
+            time.sleep(0.001)
+    print iam + ' ::: Done.'
 
-    print "============="
-    print "[i] Results."
+if __name__ == '__main__':
+    print "\n=============\n[i] Beginning.\n============="
+
+    atmp = int(raw_input("[>] Enter No. of files  >>> "))
+    while atmp != 0:
+        if obtain():
+            atmp -= 1
+            continue
+
+    manager = Manager()
+    urls = manager.list()
+
+    ecx = 0
+    jobs = []
+    for argz in conns:
+        procName = 'Process -> #' + str(ecx)
+        p = Process(target=attempt, args=(argz[0], argz[1], argz[2], argz[3], procName, urls))
+        jobs.append(p)
+        p.start()
+        ecx += 1
+    time.sleep(5)
+    for close in jobs:
+        close.join()
+    print "=============\n[i] Results."
     c200s = 0
-    for search in range(0, len(codes)):
-        if codes[search] != 404:
+    for search in range(0, len(urls)):
+        if not isinstance(urls[search], basestring) and urls[search] != 404:
             c200s += 1
             print "============="
-            print "[" + str(c200s) + "] URL ::: " + urls[search].replace("\n", "").replace("\r", "")
-            print "|__ COD ::: " + str(codes[search])
-
+            print "[" + str(c200s) + "] URL ::: " + urls[search-1].replace("\n", "").replace("\r", "")
+            print "|__ COD ::: " + str(urls[search])
     print "============="
     print "[i] " + str(c200s) + " URLs found."
-    print "[i] " + str(len(codes)) + " URLs attempted."
-    print "=============\n[*] Done.\n============="
-    print
-
-main()
-
-exit(0)
+    print "[i] " + str(len(urls)/2) + " URLs attempted."
+    print "=============\n[*] Done.\n=============\n"
+    exit(0)
