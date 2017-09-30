@@ -34,7 +34,7 @@ def obtain():
         return False
     else:
         try:
-            session = requests.head(http+link+fyle+'.'+fiex)
+            session = requests.head(http+link)
             if session.status_code == 200:
                 print "[i] Connection to " + http + " successful."
                 global conns
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         if obtain():
             atmp -= 1
             continue
-
+    startTime = time.time()
     ecx = 0
     jobs = []
     for argz in conns:
@@ -109,5 +109,6 @@ if __name__ == '__main__':
     time.sleep(5)
     for close in jobs:
         close.join()
-    print "\n=============\n[*] Done.\n============="
+    endTime = time.time()
+    print "\n=============\n[*] Done in " + str(int((endTime - startTime)/60)) + "min.\n============="
     exit(0)
