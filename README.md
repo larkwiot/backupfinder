@@ -4,4 +4,4 @@ There is not an official license for this script. That is because it is a quick 
 
 It'd be appreciated if you told everyone here about the changes you make to optimize the script, but that's your choice to do so or not.
 
-Credit to tjcater for removing the bugs I wrote
+Credit to tjcater for removing the bugs I wrote, and porting to Py 3
